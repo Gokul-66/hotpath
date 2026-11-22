@@ -4,6 +4,8 @@ A read-through cache for a slow API, built to stay correct while data changes, p
 
 It's a technical demonstration, not a production service. See [Limits](docs/DESIGN.md#limits).
 
+**Live demo: https://hotpath-mqy7.onrender.com/**. It's on a free host that sleeps when idle, so the first visit can take up to a minute.
+
 ## The hard problem
 
 Deleting a cached value after a write isn't enough. A reader that loaded the old value just before the write can store it just after the delete, and it stays wrong until its TTL. The same race exists in each process's memory, and in requests that share one load.
