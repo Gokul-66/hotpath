@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test --test-concurrency=1 test/*.test.ts",
     "bench": "node --import tsx scripts/bench.ts",
-    "bench:policy": "node --import tsx scripts/policy.ts"
+    "bench:policy": "node --import tsx scripts/policy.ts",
+    "demo": "node --import tsx scripts/demo-local.ts"
   },
   "dependencies": {
     "fastify": "^5.12.8",

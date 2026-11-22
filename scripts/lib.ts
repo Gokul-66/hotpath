@@ -8,6 +8,8 @@ import { Redis } from "ioredis";
 import type pg from "pg";
 import { createPool, migrate } from "../src/db.js";
 
+export { RedisProxy } from "../src/redisProxy.js";
+
 export const REDIS_URL = process.env.REDIS_URL ?? "redis://127.0.0.1:6399";
 
 export async function freePort(): Promise<number> {
@@ -77,61 +79,6 @@ export async function connectRedis(): Promise<Redis> {
     throw new Error(`Redis is required at ${REDIS_URL}. Start one with: docker compose up -d redis`);
   }
   return redis;
-}
-
-/** Sits between the cache and Redis, so a test can cut the connection or freeze it. */
-export class RedisProxy {
-  private readonly server: net.Server;
-  private readonly sockets = new Set<net.Socket>();
-  private mode: "pass" | "freeze" | "down" = "pass";
-  port = 0;
-
-  constructor(target: string) {
-    const { hostname, port } = new URL(target);
-    this.server = net.createServer((client) => {
-      if (this.mode === "down") return client.destroy();
-      const upstream = net.connect(Number(port || 6379), hostname);
-      for (const s of [client, upstream]) {
-        this.sockets.add(s);
-        s.on("error", () => {});
-        s.on("close", () => {
-          this.sockets.delete(s);
-          client.destroy();
-          upstream.destroy();
-        });
-      }
-      client.on("data", (d) => this.mode !== "freeze" && upstream.write(d));
-      upstream.on("data", (d) => this.mode !== "freeze" && client.write(d));
-    });
-  }
-
-  async start(): Promise<string> {
-    await new Promise<void>((r) => this.server.listen(0, "127.0.0.1", r));
-    this.port = (this.server.address() as net.AddressInfo).port;
-    return `redis://127.0.0.1:${this.port}`;
-  }
-
-  /** Connections stay open but nothing gets through, like a hung server. */
-  freeze(): void {
-    this.mode = "freeze";
-  }
-
-  /** Connections drop and new ones are refused. */
-  cut(): void {
-    this.mode = "down";
-    for (const s of this.sockets) s.destroy();
-  }
-
-  restore(): void {
-    this.mode = "pass";
-    // Frozen connections lost bytes, so they cannot be reused.
-    for (const s of this.sockets) s.destroy();
-  }
-
-  async stop(): Promise<void> {
-    for (const s of this.sockets) s.destroy();
-    await new Promise((r) => this.server.close(r));
-  }
 }
 
 export function percentile(sorted: number[], p: number): number {

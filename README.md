@@ -61,7 +61,8 @@ Needs Node 22+ and Redis. Tests and benchmarks start their own Postgres.
 ```bash
 npm install
 docker compose up -d redis
-npm test              # 31 tests, including cut and frozen Redis connections
+npm test              # 38 tests, including cut and frozen Redis connections
+npm run demo          # the demo page, on a throwaway Postgres
 npm run bench
 npm run bench:policy  # simulation only, no Redis needed
 ```
@@ -73,6 +74,12 @@ docker compose up -d
 cp .env.example .env
 node --env-file=.env --import tsx src/server.ts
 ```
+
+## Deploy the demo
+
+`render.yaml` deploys a free Render web service and a free Redis instance. Postgres is external: paste a [Neon](https://neon.tech) connection string as `DATABASE_URL` when Render asks. The first start creates the tables and about 500,000 rows.
+
+The demo (`src/demoServer.ts`) serves only its page, four experiments and a health check. The product and price routes below are not part of it, because they have no authentication. Experiments are rate limited per visitor, and three can run at once.
 
 ## API
 

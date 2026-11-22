@@ -19,13 +19,13 @@ export async function migrate(pool: pg.Pool): Promise<void> {
   try {
     await client.query("BEGIN");
     await client.query("SELECT pg_advisory_xact_lock($1)", [MIGRATION_LOCK]);
-    await client.query("CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY)");
+    await client.query("CREATE TABLE IF NOT EXISTS hotpath_migrations (name text PRIMARY KEY)");
     const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith(".sql")).sort();
     for (const name of files) {
-      const { rowCount } = await client.query("SELECT 1 FROM schema_migrations WHERE name = $1", [name]);
+      const { rowCount } = await client.query("SELECT 1 FROM hotpath_migrations WHERE name = $1", [name]);
       if (rowCount) continue;
       await client.query(await readFile(path.join(MIGRATIONS_DIR, name), "utf8"));
-      await client.query("INSERT INTO schema_migrations (name) VALUES ($1)", [name]);
+      await client.query("INSERT INTO hotpath_migrations (name) VALUES ($1)", [name]);
     }
     await client.query("COMMIT");
   } catch (err) {
@@ -78,5 +78,5 @@ export async function seed(pool: pg.Pool, size: SeedSize = DEFAULT_SEED): Promis
   } finally {
     client.release();
   }
-  await pool.query("VACUUM ANALYZE");
+  await pool.query("VACUUM ANALYZE products, reviews, order_items");
 }

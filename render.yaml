@@ -1,0 +1,30 @@
+# Render Blueprint: the demo page as one free web service, with a free Key Value (Redis) instance.
+# Postgres is external (Neon's free tier), because Render's free Postgres expires after 30 days.
+services:
+  - type: keyvalue
+    name: hotpath-redis
+    plan: free
+    region: singapore
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # internal connections only
+
+  - type: web
+    name: hotpath
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci --omit=dev
+    startCommand: node --import tsx src/demoServer.ts
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: hotpath-redis
+          property: connectionString
+      - key: POOL_SIZE
+        value: "5"
