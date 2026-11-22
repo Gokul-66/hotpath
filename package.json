@@ -1,0 +1,30 @@
+{
+  "name": "hotpath",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --import tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test --test-concurrency=1 test/*.test.ts",
+    "bench": "node --import tsx scripts/bench.ts",
+    "bench:policy": "node --import tsx scripts/policy.ts"
+  },
+  "dependencies": {
+    "fastify": "^5.12.8",
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "undici": "^8.13.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "embedded-postgres": "^18.7.0-beta.19",
+    "typescript": "^7.0.2"
+  }
+}

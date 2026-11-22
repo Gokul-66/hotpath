@@ -1,0 +1,15 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --maxmemory 64mb --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:6399:6379"
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: hot
+      POSTGRES_PASSWORD: hot
+      POSTGRES_DB: hot
+    ports:
+      - "127.0.0.1:5433:5432"
